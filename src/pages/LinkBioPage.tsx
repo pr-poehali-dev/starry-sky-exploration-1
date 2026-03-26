@@ -1,234 +1,178 @@
-import { motion } from "framer-motion"
-import { ProfileSection } from "@/components/ProfileSection"
-import { LinkCard } from "@/components/LinkCard"
-import { SocialFooter } from "@/components/SocialFooter"
-import { Globe, Youtube, Mail, ShoppingBag, FileText, MessageCircle, Send } from "lucide-react"
-
-const links = [
-  {
-    title: "Мой сайт",
-    description: "Портфолио и услуги",
-    href: "#",
-    icon: Globe,
-  },
-  {
-    title: "YouTube канал",
-    description: "Видео и туториалы",
-    href: "#",
-    icon: Youtube,
-  },
-  {
-    title: "Магазин",
-    description: "Товары и услуги",
-    href: "#",
-    icon: ShoppingBag,
-  },
-  {
-    title: "Telegram",
-    description: "Написать напрямую",
-    href: "#",
-    icon: Send,
-  },
-  {
-    title: "Бесплатные материалы",
-    description: "Шаблоны и гайды",
-    href: "#",
-    icon: FileText,
-  },
-]
-
-const socials = [
-  { icon: Send, href: "#", label: "Telegram" },
-  { icon: MessageCircle, href: "#", label: "WhatsApp" },
-  { icon: Mail, href: "#", label: "Email" },
-]
+import { useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { SearchSection } from "@/components/SearchSection"
+import { TireCard } from "@/components/TireCard"
+import { CartPanel } from "@/components/CartPanel"
+import { GlassBackground } from "@/components/GlassBackground"
+import { SEARCH_TIRES_URL } from "@/api"
+import type { Tire, CartItem } from "@/types"
 
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.06,
-      delayChildren: 0.15,
-    },
+    transition: { staggerChildren: 0.06, delayChildren: 0.15 },
   },
 }
 
 const itemVariants = {
-  hidden: {
-    opacity: 0,
-    y: 20,
-  },
+  hidden: { opacity: 0, y: 20 },
   visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      type: "spring",
-      stiffness: 350,
-      damping: 25,
-    },
+    opacity: 1, y: 0,
+    transition: { type: "spring", stiffness: 350, damping: 25 },
   },
 }
 
 export function LinkBioPage() {
+  const [tires, setTires] = useState<Tire[]>([])
+  const [loading, setLoading] = useState(false)
+  const [searched, setSearched] = useState(false)
+  const [cart, setCart] = useState<CartItem[]>([])
+  const [cartOpen, setCartOpen] = useState(false)
+
+  const handleSearch = async (params: Record<string, string>) => {
+    setLoading(true)
+    setSearched(true)
+    try {
+      const res = await fetch(`${SEARCH_TIRES_URL}?${new URLSearchParams(params)}`)
+      const data = await res.json()
+      setTires(data.tires || [])
+    } catch {
+      setTires([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const addToCart = (tire: Tire) => {
+    setCart(prev => {
+      const existing = prev.find(i => i.id === tire.id)
+      if (existing) {
+        return prev.map(i => i.id === tire.id ? { ...i, qty: i.qty + 1 } : i)
+      }
+      return [...prev, { ...tire, qty: 1 }]
+    })
+    setCartOpen(true)
+  }
+
+  const removeFromCart = (id: string) => {
+    setCart(prev => prev.filter(i => i.id !== id))
+  }
+
+  const updateQty = (id: string, qty: number) => {
+    if (qty <= 0) return removeFromCart(id)
+    setCart(prev => prev.map(i => i.id === id ? { ...i, qty } : i))
+  }
+
+  const totalCount = cart.reduce((s, i) => s + i.qty, 0)
+
   return (
-    <main className="relative min-h-screen px-6 py-10 flex flex-col overflow-hidden">
-      <div className="fixed inset-0 z-0 bg-gradient-to-br from-slate-50 via-white to-slate-100" />
-
-      {/* Animated gradient orbs */}
-      <motion.div
-        className="fixed z-0 w-[500px] h-[500px] rounded-full"
-        style={{
-          background: "radial-gradient(circle, rgba(147, 51, 234, 0.25) 0%, transparent 70%)",
-          filter: "blur(60px)",
-          top: "-10%",
-          left: "-10%",
-        }}
-        animate={{
-          x: [0, 100, 50, 0],
-          y: [0, 50, 100, 0],
-          scale: [1, 1.2, 0.9, 1],
-        }}
-        transition={{
-          duration: 20,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-      />
-
-      <motion.div
-        className="fixed z-0 w-[600px] h-[600px] rounded-full"
-        style={{
-          background: "radial-gradient(circle, rgba(236, 72, 153, 0.2) 0%, transparent 70%)",
-          filter: "blur(80px)",
-          top: "30%",
-          right: "-20%",
-        }}
-        animate={{
-          x: [0, -80, -40, 0],
-          y: [0, 80, -40, 0],
-          scale: [1, 0.85, 1.15, 1],
-        }}
-        transition={{
-          duration: 25,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-      />
-
-      <motion.div
-        className="fixed z-0 w-[450px] h-[450px] rounded-full"
-        style={{
-          background: "radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%)",
-          filter: "blur(70px)",
-          bottom: "-5%",
-          left: "20%",
-        }}
-        animate={{
-          x: [0, 60, -30, 0],
-          y: [0, -60, 30, 0],
-          scale: [1, 1.1, 0.95, 1],
-        }}
-        transition={{
-          duration: 18,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-      />
-
-      <motion.div
-        className="fixed z-0 w-[350px] h-[350px] rounded-full"
-        style={{
-          background: "radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%)",
-          filter: "blur(50px)",
-          top: "60%",
-          left: "-5%",
-        }}
-        animate={{
-          x: [0, 40, 80, 0],
-          y: [0, -40, 20, 0],
-          scale: [1, 1.2, 1, 1],
-        }}
-        transition={{
-          duration: 22,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-      />
-
-      <motion.div
-        className="fixed inset-0 z-0 pointer-events-none opacity-60"
-        animate={{
-          background: [
-            "radial-gradient(ellipse 80% 60% at 20% 30%, rgba(255,255,255,0.6), transparent 50%), radial-gradient(ellipse 60% 80% at 80% 70%, rgba(255,255,255,0.4), transparent 50%)",
-            "radial-gradient(ellipse 80% 60% at 50% 20%, rgba(255,255,255,0.6), transparent 50%), radial-gradient(ellipse 60% 80% at 30% 80%, rgba(255,255,255,0.4), transparent 50%)",
-            "radial-gradient(ellipse 80% 60% at 80% 40%, rgba(255,255,255,0.6), transparent 50%), radial-gradient(ellipse 60% 80% at 60% 60%, rgba(255,255,255,0.4), transparent 50%)",
-            "radial-gradient(ellipse 80% 60% at 20% 30%, rgba(255,255,255,0.6), transparent 50%), radial-gradient(ellipse 60% 80% at 80% 70%, rgba(255,255,255,0.4), transparent 50%)",
-          ],
-        }}
-        transition={{
-          duration: 15,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-      />
-
-      <motion.div
-        className="fixed z-0 pointer-events-none"
-        style={{
-          width: "200%",
-          height: "100px",
-          background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)",
-          transform: "rotate(-35deg)",
-          top: "20%",
-          left: "-50%",
-        }}
-        animate={{
-          left: ["-50%", "100%"],
-        }}
-        transition={{
-          duration: 8,
-          repeat: Infinity,
-          ease: "easeInOut",
-          repeatDelay: 4,
-        }}
-      />
-
-      {/* Noise texture overlay */}
-      <div
-        className="pointer-events-none fixed inset-0 z-[1]"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-          opacity: 0.025,
-        }}
-      />
+    <main className="relative min-h-screen px-4 py-8 flex flex-col overflow-hidden">
+      <GlassBackground />
 
       <motion.div
         initial="hidden"
         animate="visible"
         variants={containerVariants}
-        className="relative z-10 mx-auto max-w-[400px] w-full flex flex-col flex-1 justify-between"
+        className="relative z-10 mx-auto max-w-2xl w-full flex flex-col gap-6"
       >
-        <motion.div variants={itemVariants} className="pt-2">
-          <ProfileSection
-            name="GlassLinks"
-            bio="Креативный дизайнер и разработчик"
-            imageUrl="/images/544291433-18043960274659947-5766591717842883293-n.jpg"
-          />
+        {/* Header */}
+        <motion.div variants={itemVariants} className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800 tracking-tight">🔍 ШинПоиск</h1>
+            <p className="text-sm text-gray-500 mt-0.5">Подбор шин по параметрам с baza.drom.ru</p>
+          </div>
+          <motion.button
+            onClick={() => setCartOpen(true)}
+            className="relative flex items-center gap-2 px-4 py-2 rounded-2xl text-gray-700 font-semibold text-sm"
+            style={{
+              background: "rgba(255,255,255,0.55)",
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+              boxShadow: "inset 0 1px 1px rgba(255,255,255,0.9), 0 0 0 1px rgba(255,255,255,0.6), 0 4px 16px rgba(0,0,0,0.08)",
+              border: "1px solid rgba(255,255,255,0.5)",
+            }}
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.97 }}
+          >
+            🛒 Корзина
+            {totalCount > 0 && (
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white text-[11px] font-bold"
+              >
+                {totalCount}
+              </motion.span>
+            )}
+          </motion.button>
         </motion.div>
 
-        <motion.div className="space-y-3 py-8" variants={containerVariants}>
-          {links.map((link) => (
-            <motion.div key={link.title} variants={itemVariants}>
-              <LinkCard {...link} />
+        {/* Search */}
+        <motion.div variants={itemVariants}>
+          <SearchSection onSearch={handleSearch} loading={loading} />
+        </motion.div>
+
+        {/* Results */}
+        <AnimatePresence>
+          {loading && (
+            <motion.div
+              key="loader"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="flex flex-col items-center py-12 gap-3"
+            >
+              <motion.div
+                className="h-10 w-10 rounded-full border-2 border-purple-400 border-t-transparent"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+              />
+              <p className="text-sm text-gray-500">Ищем шины на drom.ru...</p>
             </motion.div>
-          ))}
-        </motion.div>
+          )}
 
-        <motion.div variants={itemVariants} className="pb-2">
-          <SocialFooter socials={socials} copyright="2025 GlassLinks" />
+          {!loading && searched && tires.length === 0 && (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+              className="text-center py-12 text-gray-400 text-sm"
+            >
+              По вашему запросу ничего не найдено. Попробуйте изменить параметры.
+            </motion.div>
+          )}
+
+          {!loading && tires.length > 0 && (
+            <motion.div
+              key="results"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="flex flex-col gap-3"
+            >
+              <motion.p variants={itemVariants} className="text-xs text-gray-400 px-1">
+                Найдено: {tires.length} предложений
+              </motion.p>
+              {tires.map(tire => (
+                <motion.div key={tire.id} variants={itemVariants}>
+                  <TireCard tire={tire} onAdd={addToCart} />
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Footer */}
+        <motion.div variants={itemVariants} className="text-center text-xs text-gray-400 pb-4">
+          Данные с baza.drom.ru · © 2025 ШинПоиск
         </motion.div>
       </motion.div>
+
+      <CartPanel
+        open={cartOpen}
+        onClose={() => setCartOpen(false)}
+        cart={cart}
+        onRemove={removeFromCart}
+        onUpdateQty={updateQty}
+      />
     </main>
   )
 }

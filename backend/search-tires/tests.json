@@ -1,0 +1,20 @@
+{
+  "tests": [
+    {
+      "name": "Search tires - no params",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": { "tires": [] },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Search tires with params",
+      "method": "GET",
+      "path": "/?width=205&height=55&radius=16&season=summer",
+      "expectedStatus": 200,
+      "expectedBody": { "count": 0 },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

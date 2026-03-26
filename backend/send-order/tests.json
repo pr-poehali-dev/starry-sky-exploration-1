@@ -1,0 +1,18 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "POST order - no body returns 500",
+      "method": "POST",
+      "path": "/",
+      "body": {},
+      "expectedStatus": 500,
+      "bodyMatcher": "partial"
+    }
+  ]
+}
